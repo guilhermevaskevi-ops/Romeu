@@ -1,0 +1,2850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sobrevivência Z</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#ffffff;
+    color:white;
+    overflow:hidden;
+   
+}
+
+.tela{
+    width:100vw;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+     
+    width:100vw;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    background-image: url("https://thumbs.dreamstime.com/b/zombie-hand-rising-out-grave-cemetery-night-zombie-hand-rising-out-grave-cemetery-night-101213448.jpg");
+    background-repeat:no-repeat;
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+}
+
+
+.img {
+    max-width:100%;
+    height:auto;
+}
+
+.escondido{
+    display:none !important;
+}
+
+h1{
+    font-size:50px;
+    margin-bottom:20px;
+    color:#ff3333;
+    text-shadow:0 0 10px red,0 0 25px red;
+}
+
+h2{
+    margin-bottom:20px;
+}
+
+button{
+    padding:14px 25px;
+    margin:8px;
+    border:none;
+    border-radius:10px;
+    background:#014b02;
+    color:rgb(255, 0, 0);
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    background:#ff4d5a;
+}
+
+.info{
+    text-align:center;
+    margin:20px;
+    color:#ccc;
+    line-height:1.8;
+}
+
+.recorde{
+    font-size:22px;
+    color:#ffd700;
+    margin:10px;
+}
+
+.loja-box{
+    width:500px;
+    max-width:92%;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:25px;
+    background:#181818;
+    border:2px solid #444;
+    border-radius:15px;
+    box-shadow:0 0 30px #000;
+}
+
+.dinheiro-info{
+    color:#ffd700;
+    font-size:22px;
+    margin-bottom:15px;
+    text-align:center;
+}
+
+.item-loja{
+    background:#252525;
+    padding:15px;
+    margin:10px 0;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    border:1px solid #333;
+}
+
+.item-loja small{
+    color:#aaa;
+}
+
+.item-loja button{
+    margin:0;
+    padding:10px 15px;
+    font-size:14px;
+    white-space:nowrap;
+}
+
+.money-upgrade{
+    border:2px solid #d4af37;
+    background:linear-gradient(135deg,#252525,#302b18);
+}
+
+.money-upgrade button{
+    background:#b8860b;
+}
+
+.money-upgrade button:hover{
+    background:#daa520;
+}
+
+#canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    background:#101010;
+}
+
+.hud{
+    position:fixed;
+    top:15px;
+    left:15px;
+    z-index:10;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.hud div{
+    background:rgba(0,0,0,.8);
+    border:1px solid #444;
+    border-radius:8px;
+    padding:8px 12px;
+    font-weight:bold;
+    box-shadow:0 0 5px #000;
+}
+
+.boss-hud{
+    position:fixed;
+    top:75px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+    width:500px;
+    max-width:80%;
+    text-align:center;
+    display:none;
+}
+
+.boss-nome{
+    color:#ff3333;
+    font-size:22px;
+    font-weight:bold;
+    text-shadow:0 0 10px red;
+}
+
+.barra-boss{
+    width:100%;
+    height:25px;
+    background:#222;
+    border:2px solid #fff;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:5px;
+}
+
+.vida-boss{
+    width:100%;
+    height:100%;
+    background:#e60000;
+    transition:.1s;
+}
+
+.controles{
+    position:fixed;
+    bottom:15px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+    background:rgba(0,0,0,.8);
+    padding:10px 15px;
+    border-radius:8px;
+    font-size:14px;
+    color:#ccc;
+    text-align:center;
+    white-space:nowrap;
+}
+
+@media(max-width:600px){
+
+    h1{
+        font-size:35px;
+    }
+
+    .hud{
+        font-size:12px;
+    }
+
+    .hud div{
+        padding:6px 8px;
+    }
+
+    .controles{
+        font-size:11px;
+    }
+}
+
+/* =========================
+   ZUMBI PIXELADO DE FUNDO
+   ========================= */
+.zumbi-fundo{
+    position:fixed;
+    left:-120px;
+    bottom:12%;
+    width:54px;
+    height:72px;
+    z-index:1;
+    pointer-events:none;
+    image-rendering:pixelated;
+    animation: andarZumbi 14s linear infinite;
+    opacity:.42;
+    filter:drop-shadow(0 0 5px #1eff3a);
+}
+.zumbi-fundo .cabeca{
+    position:absolute;
+    width:32px;height:30px;
+    left:11px;top:0;
+    background:#6fa83c;
+    box-shadow:
+      6px 5px 0 #5b8d32,
+      0 30px 0 #245b2d,
+      -8px 30px 0 #245b2d,
+      8px 30px 0 #245b2d,
+      16px 30px 0 #245b2d,
+      -13px 12px 0 #376f35;
+}
+.zumbi-fundo .cabeca::before{
+    content:"";
+    position:absolute;
+    left:6px;top:10px;
+    width:6px;height:6px;
+    background:#111;
+    box-shadow:16px 0 0 #111, 5px 14px 0 #111, 11px 14px 0 #111;
+}
+.zumbi-fundo .corpo{
+    position:absolute;
+    left:14px;top:30px;
+    width:26px;height:32px;
+    background:#315f9b;
+    box-shadow:inset 7px 0 #244d80, inset -6px 0 #3d73b5;
+}
+.zumbi-fundo .braco{
+    position:absolute;
+    top:34px;
+    width:10px;height:34px;
+    background:#6fa83c;
+}
+.zumbi-fundo .braco.esq{left:3px;transform:rotate(22deg)}
+.zumbi-fundo .braco.dir{right:3px;transform:rotate(-22deg)}
+.zumbi-fundo .perna{
+    position:absolute;
+    top:60px;
+    width:10px;height:25px;
+    background:#222;
+}
+.zumbi-fundo .perna.esq{left:15px;transform:rotate(8deg)}
+.zumbi-fundo .perna.dir{right:15px;transform:rotate(-12deg)}
+
+@keyframes andarZumbi{
+    0%{left:-100px;transform:scaleX(1)}
+    48%{transform:scaleX(1)}
+    50%{transform:scaleX(-1)}
+    98%{transform:scaleX(-1)}
+    100%{left:calc(100vw + 100px);transform:scaleX(1)}
+}
+
+/* deixa o zumbi atrás dos menus e do jogo */
+#menu,#loja,#gameOver,#jogo{position:relative;z-index:2}
+#canvas{z-index:0}
+
+</style>
+</head>
+
+<body>
+
+
+<!-- ZUMBI PIXELADO DECORATIVO -->
+<div class="zumbi-fundo" aria-hidden="true">
+    <div class="cabeca"></div>
+    <div class="corpo"></div>
+    <div class="braco esq"></div>
+    <div class="braco dir"></div>
+    <div class="perna esq"></div>
+    <div class="perna dir"></div>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="tela">
+
+    <h1>🧟 Sobrevivência Z</h1>
+
+    <div class="info">
+
+        <p>Sobreviva o máximo que conseguir!</p>
+        <p>Derrote inimigos e consiga moedas.</p>
+
+        <br>
+
+        <p>🎮 WASD / SETAS = Mover</p>
+        <p>🖱️ MOUSE = Mirar e Atirar</p>
+        <p>🔫 1-8 = Trocar arma</p>
+
+        <br>
+
+        <p>👹 BOSS aparece nas ondas 10, 20, 30...</p>
+        <p>💰 Cada BOSS vale 1000 moedas!</p>
+
+    </div>
+     <div class="img">
+        
+    <button onclick="iniciarJogo()">🎮 JOGAR</button>
+    <button onclick="abrirLoja()">🛒 LOJA</button>
+       
+    </div>
+
+    <div class="recorde">
+        🏆 Recorde:
+        <span id="recordeMenu">0</span>
+    </div>
+
+    <div class="recorde">
+        🪙 Moedas:
+        <span id="moedasMenu">0</span>
+    </div>
+
+</div>
+
+
+<!-- LOJA -->
+<div id="loja" class="tela escondido">
+
+    <div class="loja-box">
+
+        <h2>🛒 LOJA</h2>
+
+        <div class="dinheiro-info">
+            🪙 Moedas:
+            <span id="moedasLoja">0</span>
+        </div>
+
+        <div class="item-loja">
+
+            <div>
+                ❤️ Vida
+                <br>
+                <small>+20 de vida máxima</small>
+            </div>
+
+            <button onclick="comprarVida()">25 🪙</button>
+
+        </div>
+
+
+        <div class="item-loja">
+
+            <div>
+                ⚡ Velocidade
+                <br>
+                <small>+0.5 velocidade</small>
+            </div>
+
+            <button onclick="comprarVelocidade()">30 🪙</button>
+
+        </div>
+
+
+        <div class="item-loja">
+
+            <div>
+                💥 Dano
+                <br>
+                <small>+5 dano</small>
+            </div>
+
+            <button onclick="comprarDano()">30 🪙</button>
+
+        </div>
+
+
+        <div class="item-loja money-upgrade">
+
+            <div>
+
+                💰 MONEY
+
+                <br>
+
+                <strong>
+                    Multiplicador:
+                    <span id="multiplicadorLoja">1</span>x
+                </strong>
+
+                <br>
+
+                <small>
+                    Próximo:
+                    <span id="proximoMultiplicador">2</span>x
+                </small>
+
+                <br>
+
+                <small>
+                    Preço:
+                    <span id="precoMoney">40</span> 🪙
+                </small>
+
+            </div>
+
+            <button onclick="comprarDobroDinheiro()">
+                COMPRAR
+            </button>
+
+        </div>
+
+
+        <div class="item-loja">
+
+            <div>
+                🔫 Novas armas
+                <br>
+                <small>Espingarda + Metralhadora</small>
+            </div>
+
+            <button onclick="comprarArmas()" id="botaoArmas">
+                35 🪙
+            </button>
+
+        </div>
+
+
+        <div class="item-loja">
+
+            <div>
+                ⚡ Laser
+                <br>
+                <small>80 dano • Tiro rápido</small>
+            </div>
+
+            <button onclick="comprarLaser()" id="botaoLaser">
+                100 🪙
+            </button>
+
+        </div>
+
+
+        <div class="item-loja">
+
+            <div>
+                🚀 Lançador de Foguetes
+                <br>
+                <small>150 dano • Muito poderoso</small>
+            </div>
+
+            <button onclick="comprarFoguete()" id="botaoFoguete">
+                300 🪙
+            </button>
+
+        </div>
+
+
+        <div class="item-loja"><div>🔥 Rifle Pesado<br><small>200 dano • Poderoso</small></div><button onclick="comprarRifle()" id="botaoRifle">1000 🪙</button></div>
+
+        <div class="item-loja"><div>💣 Canhão Destruidor<br><small>250 dano • Tiro devastador</small></div><button onclick="comprarCanhao()" id="botaoCanhao">1500 🪙</button></div>
+
+        <div class="item-loja" style="border:2px solid #ff5500;background:linear-gradient(135deg,#2b1b14,#3a1710);"><div>☢️ BOMBA NUCLEAR<br><small>2000 🪙 • Cai e explode o mapa inteiro!</small></div><button onclick="comprarBomba()" id="botaoBomba">2000 🪙</button></div>
+
+        <button onclick="fecharLoja()">
+            ⬅️ Voltar
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- JOGO -->
+<div id="jogo" class="escondido">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="hud">
+
+        <div>❤️ <span id="vida">100</span></div>
+
+        <div>🪙 <span id="moedas">0</span></div>
+
+        <div>💰 <span id="multiplicadorHUD">1</span>x</div>
+
+        <div>⭐ <span id="xp">0</span></div>
+
+        <div>🏆 <span id="pontos">0</span></div>
+
+        <div>🌊 <span id="onda">1</span></div>
+
+        <div>🔫 <span id="armaAtual">Pistola</span></div>
+
+    </div>
+
+
+    <!-- BARRA DO BOSS -->
+
+    <div id="bossHUD" class="boss-hud">
+
+        <div class="boss-nome">
+            👹 BOSS
+        </div>
+
+        <div class="barra-boss">
+
+            <div id="vidaBoss" class="vida-boss"></div>
+
+        </div>
+
+        <div>
+            ❤️ <span id="vidaBossTexto">1000</span> / 1000
+        </div>
+
+    </div>
+
+
+    <div class="controles">
+
+        WASD / SETAS = Mover |
+        MOUSE = Atirar |
+        1-8 = Armas
+
+    </div>
+
+</div>
+
+
+<!-- GAME OVER -->
+<div id="gameOver" class="tela escondido">
+
+    <h1>💀 GAME OVER</h1>
+
+    <div class="info">
+
+        <p>
+            🏆 Pontuação:
+            <strong id="pontuacaoFinal">0</strong>
+        </p>
+
+        <p>
+            🌊 Onda:
+            <strong id="ondaFinal">1</strong>
+        </p>
+
+        <p>
+            🪙 Moedas:
+            <strong id="moedasFinal">0</strong>
+        </p>
+
+        <p class="recorde">
+
+            🏆 Recorde:
+            <span id="recordeFinal">0</span>
+
+        </p>
+
+    </div>
+
+    <button onclick="iniciarJogo()">
+        🔄 Jogar novamente
+    </button>
+
+    <button onclick="voltarMenu()">
+        🏠 Menu
+    </button>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+
+function ajustarCanvas(){
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+}
+
+ajustarCanvas();
+
+window.addEventListener("resize", ajustarCanvas);
+
+
+const menu = document.getElementById("menu");
+const loja = document.getElementById("loja");
+const jogo = document.getElementById("jogo");
+const gameOver = document.getElementById("gameOver");
+
+const bossHUD = document.getElementById("bossHUD");
+const vidaBossBarra = document.getElementById("vidaBoss");
+const vidaBossTexto = document.getElementById("vidaBossTexto");
+
+
+let jogador;
+
+let inimigos = [];
+let tiros = [];
+let moedas = [];
+let particulas = [];
+
+let teclas = {};
+
+let mouse = {
+    x:0,
+    y:0,
+    pressionado:false
+};
+
+let rodando = false;
+
+let ultimaCriacao = 0;
+let ultimoTiro = 0;
+
+let pontos = 0;
+let xp = 0;
+let onda = 1;
+
+let moedasTotal = 0;
+
+let recorde =
+Number(localStorage.getItem("recordeZ")) || 0;
+
+
+/* =========================
+   BOSS
+========================= */
+
+let boss = null;
+
+let ultimoBossCriado = 0;
+
+
+/* =========================
+   MELHORIAS
+========================= */
+
+let melhorias = {
+
+    vida:0,
+
+    velocidade:0,
+
+    dano:0,
+
+    multiplicadorDinheiro:1,
+
+    nivelDinheiro:0,
+
+    armas:false,
+
+    laser:false,
+
+    foguete:false,
+    rifle:false,
+    canhao:false,
+    bomba:false
+
+};
+
+
+/* =========================
+   ARMAS
+========================= */
+
+const armas = {
+
+    pistola:{
+        nome:"Pistola",
+        dano:25,
+        velocidade:10,
+        intervalo:180,
+        tamanho:5
+    },
+
+    shotgun:{
+        nome:"Espingarda",
+        dano:18,
+        velocidade:9,
+        intervalo:500,
+        tamanho:6
+    },
+
+    metralhadora:{
+        nome:"Metralhadora",
+        dano:12,
+        velocidade:13,
+        intervalo:70,
+        tamanho:4
+    },
+
+    laser:{
+        nome:"Laser",
+        dano:80,
+        velocidade:18,
+        intervalo:250,
+        tamanho:7
+    },
+
+    foguete:{nome:"Lançador de Foguetes",dano:150,velocidade:7,intervalo:900,tamanho:10},
+    rifle:{nome:"Rifle Pesado",dano:200,velocidade:15,intervalo:350,tamanho:8},
+    canhao:{nome:"Canhão Destruidor",dano:250,velocidade:8,intervalo:700,tamanho:12},
+    bomba:{nome:"BOMBA NUCLEAR",dano:999999,velocidade:5,intervalo:3000,tamanho:14}
+
+};
+
+
+let armaAtual = "pistola";
+
+
+/* =========================
+   SISTEMA DE SOM
+========================= */
+
+let audioContext = null;
+
+
+function iniciarAudio(){
+
+    if(!audioContext){
+
+        audioContext =
+        new (window.AudioContext ||
+        window.webkitAudioContext)();
+
+    }
+
+    if(audioContext.state === "suspended"){
+        audioContext.resume();
+    }
+
+}
+
+
+function som(frequencia,duracao,tipo="square",volume=0.05){
+
+    iniciarAudio();
+
+    const oscillator =
+    audioContext.createOscillator();
+
+    const gain =
+    audioContext.createGain();
+
+    oscillator.type = tipo;
+
+    oscillator.frequency.value = frequencia;
+
+    gain.gain.setValueAtTime(
+        volume,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + duracao
+    );
+
+    oscillator.connect(gain);
+
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + duracao
+    );
+
+}
+
+
+/* Som do tiro */
+
+function somTiro(){
+
+    if(armaAtual === "laser"){
+
+        som(900,0.08,"sawtooth",0.025);
+
+    }
+
+    else if(armaAtual === "foguete" || armaAtual === "canhao"){
+        som(120,0.2,"sawtooth",0.04);
+    }
+    else if(armaAtual === "bomba"){
+        som(70,0.3,"sawtooth",0.07);
+    }
+    else{
+
+        som(250,0.05,"square",0.025);
+
+    }
+
+}
+
+
+/* Som quando o Boss aparece */
+
+function somBoss(){
+
+    iniciarAudio();
+
+    som(100,0.25,"sawtooth",0.08);
+
+    setTimeout(function(){
+
+        som(70,0.35,"sawtooth",0.08);
+
+    },250);
+
+    setTimeout(function(){
+
+        som(40,0.6,"sawtooth",0.1);
+
+    },600);
+
+}
+
+
+/* Som de dano do Boss */
+
+function somDanoBoss(){
+
+    som(80,0.04,"square",0.015);
+
+}
+
+
+/* Som da morte do Boss */
+
+function somMorteBoss(){
+
+    som(500,0.15,"sawtooth",0.08);
+
+    setTimeout(function(){
+
+        som(300,0.15,"sawtooth",0.08);
+
+    },150);
+
+    setTimeout(function(){
+
+        som(150,0.5,"sawtooth",0.1);
+
+    },300);
+
+}
+
+
+/* Som ao pegar moeda */
+
+function somMoeda(){
+
+    som(900,0.08,"sine",0.04);
+
+    setTimeout(function(){
+
+        som(1300,0.12,"sine",0.04);
+
+    },80);
+
+}
+
+
+/* =========================
+   JOGADOR
+========================= */
+
+function criarJogador(){
+
+    return {
+
+        x:canvas.width/2,
+
+        y:canvas.height/2,
+
+        tamanho:20,
+
+        velocidade:
+        4 + melhorias.velocidade*0.5,
+
+        vidaMax:
+        100 + melhorias.vida*20,
+
+        vida:
+        100 + melhorias.vida*20
+
+    };
+
+}
+
+
+/* =========================
+   TECLADO
+========================= */
+
+document.addEventListener("keydown",function(event){
+
+    teclas[event.key.toLowerCase()] = true;
+
+
+    if(event.key === "1")
+        armaAtual = "pistola";
+
+
+    if(event.key === "2" && melhorias.armas)
+        armaAtual = "shotgun";
+
+
+    if(event.key === "3" && melhorias.armas)
+        armaAtual = "metralhadora";
+
+
+    if(event.key === "4" && melhorias.laser)
+        armaAtual = "laser";
+
+
+    if(event.key === "5" && melhorias.foguete) armaAtual = "foguete";
+    if(event.key === "6" && melhorias.rifle) armaAtual = "rifle";
+    if(event.key === "7" && melhorias.canhao) armaAtual = "canhao";
+    if(event.key === "8" && melhorias.bomba) armaAtual = "bomba";
+
+    atualizarArmaHUD();
+
+});
+
+
+document.addEventListener("keyup",function(event){
+
+    teclas[event.key.toLowerCase()] = false;
+
+});
+
+
+/* =========================
+   MOUSE
+========================= */
+
+canvas.addEventListener("mousemove",function(event){
+
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+
+});
+
+
+canvas.addEventListener("mousedown",function(){
+
+    iniciarAudio();
+
+    mouse.pressionado = true;
+
+});
+
+
+canvas.addEventListener("mouseup",function(){
+
+    mouse.pressionado = false;
+
+});
+
+
+/* =========================
+   INICIAR JOGO
+========================= */
+
+function iniciarJogo(){
+
+    iniciarAudio();
+
+    menu.classList.add("escondido");
+
+    loja.classList.add("escondido");
+
+    gameOver.classList.add("escondido");
+
+    jogo.classList.remove("escondido");
+
+
+    jogador = criarJogador();
+
+
+    inimigos = [];
+
+    tiros = [];
+
+    moedas = [];
+
+    particulas = [];
+
+
+    boss = null;
+
+
+    pontos = 0;
+
+    xp = 0;
+
+    onda = 1;
+
+
+    ultimaCriacao = 0;
+
+    ultimoTiro = 0;
+
+    ultimoBossCriado = 0;
+
+
+    armaAtual = "pistola";
+
+
+    rodando = true;
+
+
+    bossHUD.style.display = "none";
+
+
+    atualizarHUD();
+
+
+    requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   LOOP
+========================= */
+
+function loop(){
+
+    if(!rodando)
+        return;
+
+
+    atualizar();
+
+    desenhar();
+
+
+    requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   ATUALIZAR
+========================= */
+
+function atualizar(){
+
+    moverJogador();
+
+    criarInimigos();
+
+    criarBoss();
+
+    moverInimigos();
+
+    moverBoss();
+
+    atirar();
+
+    moverTiros();
+
+    atualizarMoedas();
+
+    atualizarParticulas();
+
+    verificarColisoes();
+
+    verificarColisaoBoss();
+
+    verificarOnda();
+
+    atualizarHUD();
+
+}
+
+
+/* =========================
+   MOVIMENTO DO JOGADOR
+========================= */
+
+function moverJogador(){
+
+    if(teclas["w"] || teclas["arrowup"])
+        jogador.y -= jogador.velocidade;
+
+
+    if(teclas["s"] || teclas["arrowdown"])
+        jogador.y += jogador.velocidade;
+
+
+    if(teclas["a"] || teclas["arrowleft"])
+        jogador.x -= jogador.velocidade;
+
+
+    if(teclas["d"] || teclas["arrowright"])
+        jogador.x += jogador.velocidade;
+
+
+    jogador.x =
+    Math.max(
+        jogador.tamanho,
+        Math.min(
+            canvas.width-jogador.tamanho,
+            jogador.x
+        )
+    );
+
+
+    jogador.y =
+    Math.max(
+        jogador.tamanho,
+        Math.min(
+            canvas.height-jogador.tamanho,
+            jogador.y
+        )
+    );
+
+}
+
+
+/* =========================
+   INIMIGOS
+========================= */
+
+function criarInimigos(){
+
+    /* Não cria inimigos normais enquanto Boss estiver vivo */
+
+    if(boss)
+        return;
+
+
+    let agora = Date.now();
+
+
+    let intervalo =
+    Math.max(
+        250,
+        1000 - onda*50
+    );
+
+
+    if(agora-ultimaCriacao > intervalo){
+
+        ultimaCriacao = agora;
+
+
+        let lado =
+        Math.floor(Math.random()*4);
+
+
+        let x,y;
+
+
+        if(lado===0){
+
+            x=Math.random()*canvas.width;
+            y=-30;
+
+        }
+
+
+        if(lado===1){
+
+            x=canvas.width+30;
+            y=Math.random()*canvas.height;
+
+        }
+
+
+        if(lado===2){
+
+            x=Math.random()*canvas.width;
+            y=canvas.height+30;
+
+        }
+
+
+        if(lado===3){
+
+            x=-30;
+            y=Math.random()*canvas.height;
+
+        }
+
+
+        inimigos.push({
+
+            x:x,
+
+            y:y,
+
+            tamanho:
+            14+Math.random()*10,
+
+            vida:
+            30+onda*8,
+
+            velocidade:
+            1+onda*0.05,
+
+            dano:10
+
+        });
+
+    }
+
+}
+
+
+/* =========================
+   CRIAR BOSS
+========================= */
+
+function criarBoss(){
+
+    /* Boss apenas nas ondas 10,20,30...100 */
+
+    let ehOndaBoss =
+    onda >= 10 &&
+    onda <= 100 &&
+    onda % 10 === 0;
+
+
+    if(!ehOndaBoss)
+        return;
+
+
+    if(boss)
+        return;
+
+
+    if(ultimoBossCriado === onda)
+        return;
+
+
+    /* Evita criar Boss se ainda existem inimigos */
+
+    if(inimigos.length > 0)
+        return;
+
+
+    ultimoBossCriado = onda;
+
+
+    boss = {
+
+        x:canvas.width/2,
+
+        y:-100,
+
+        tamanho:55,
+
+        vida:1000,
+
+        vidaMax:1000,
+
+        velocidade:
+        0.6 + onda*0.01,
+
+        dano:15
+
+    };
+
+
+    bossHUD.style.display = "block";
+
+
+    atualizarBossHUD();
+
+
+    somBoss();
+
+
+    alert(
+        "👹 BOSS APARECEU!\n\n"+
+        "🌊 Onda "+onda+"\n"+
+        "❤️ Vida: 1000\n"+
+        "🪙 Recompensa: 1000 moedas!"
+    );
+
+}
+
+
+/* =========================
+   MOVIMENTO DOS INIMIGOS
+========================= */
+
+function moverInimigos(){
+
+    inimigos.forEach(function(inimigo){
+
+        let dx =
+        jogador.x-inimigo.x;
+
+        let dy =
+        jogador.y-inimigo.y;
+
+
+        let distancia =
+        Math.sqrt(dx*dx+dy*dy);
+
+
+        if(distancia>0){
+
+            inimigo.x +=
+            (dx/distancia)*
+            inimigo.velocidade;
+
+
+            inimigo.y +=
+            (dy/distancia)*
+            inimigo.velocidade;
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   MOVIMENTO DO BOSS
+========================= */
+
+function moverBoss(){
+
+    if(!boss)
+        return;
+
+
+    let dx =
+    jogador.x-boss.x;
+
+    let dy =
+    jogador.y-boss.y;
+
+
+    let distancia =
+    Math.sqrt(dx*dx+dy*dy);
+
+
+    if(distancia>0){
+
+        boss.x +=
+        (dx/distancia)*
+        boss.velocidade;
+
+
+        boss.y +=
+        (dy/distancia)*
+        boss.velocidade;
+
+    }
+
+
+    /* Boss causa dano ao jogador */
+
+    if(distancia <
+       jogador.tamanho+
+       boss.tamanho){
+
+        jogador.vida -= 0.8;
+
+
+        if(distancia>0){
+
+            boss.x -= dx*0.01;
+
+            boss.y -= dy*0.01;
+
+        }
+
+
+        if(jogador.vida<=0){
+
+            terminarJogo();
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   ATIRAR
+========================= */
+
+function atirar(){
+
+    if(!mouse.pressionado)
+        return;
+
+
+    let agora=Date.now();
+
+
+    let arma=armas[armaAtual];
+
+
+    if(agora-ultimoTiro < arma.intervalo)
+        return;
+
+
+    ultimoTiro=agora;
+
+
+    let dx =
+    mouse.x-jogador.x;
+
+    let dy =
+    mouse.y-jogador.y;
+
+
+    let distancia =
+    Math.sqrt(dx*dx+dy*dy);
+
+
+    if(distancia===0)
+        return;
+
+
+    somTiro();
+
+
+    if(armaAtual==="bomba"){
+        tiros.push({x:mouse.x,y:-80,vx:0,vy:arma.velocidade,tamanho:arma.tamanho,dano:arma.dano,bomba:true,alvoX:mouse.x,alvoY:mouse.y});
+        return;
+    }
+
+    if(armaAtual==="shotgun"){
+
+        for(let i=-2;i<=2;i++){
+
+            let angulo =
+            Math.atan2(dy,dx)+
+            i*0.12;
+
+
+            tiros.push({
+
+                x:jogador.x,
+
+                y:jogador.y,
+
+                vx:
+                Math.cos(angulo)*
+                arma.velocidade,
+
+                vy:
+                Math.sin(angulo)*
+                arma.velocidade,
+
+                tamanho:
+                arma.tamanho,
+
+                dano:
+                arma.dano+
+                melhorias.dano*5
+
+            });
+
+        }
+
+    }
+
+    else{
+
+        tiros.push({
+
+            x:jogador.x,
+
+            y:jogador.y,
+
+            vx:
+            (dx/distancia)*
+            arma.velocidade,
+
+            vy:
+            (dy/distancia)*
+            arma.velocidade,
+
+            tamanho:
+            arma.tamanho,
+
+            dano:
+            arma.dano+
+            melhorias.dano*5
+
+        });
+
+    }
+
+}
+
+
+/* =========================
+   MOVIMENTO DOS TIROS
+========================= */
+
+function moverTiros(){
+    tiros.forEach(function(tiro){
+        if(tiro.bomba){
+            if(tiro.y < tiro.alvoY) tiro.y += tiro.vy;
+            else { explodirBomba(tiro.alvoX,tiro.alvoY); tiro.explodida=true; }
+        } else { tiro.x += tiro.vx; tiro.y += tiro.vy; }
+    });
+    tiros=tiros.filter(function(tiro){
+        if(tiro.bomba) return !tiro.explodida;
+        return tiro.x>-50 && tiro.x<canvas.width+50 && tiro.y>-50 && tiro.y<canvas.height+50;
+    });
+}
+
+function explodirBomba(x,y){
+    som(60,0.8,"sawtooth",0.12);
+    inimigos.forEach(function(inimigo){
+        for(let i=0;i<8;i++) criarParticulas(inimigo.x,inimigo.y);
+        pontos+=10; xp+=5; moedas.push({x:inimigo.x,y:inimigo.y,tamanho:8});
+    });
+    inimigos=[];
+    if(boss){ boss.vida=0; derrotarBoss(); }
+    for(let i=0;i<180;i++) particulas.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14,vida:50+Math.random()*40});
+    alert("☢️ BOMBA DETONADA!\n\n💥 TODOS OS ZUMBIS FORAM DESTRUÍDOS!");
+}
+
+
+/* =========================
+   MOEDAS
+========================= */
+
+function atualizarMoedas(){
+
+    moedas=moedas.filter(function(moeda){
+
+        let dx =
+        jogador.x-moeda.x;
+
+        let dy =
+        jogador.y-moeda.y;
+
+
+        let distancia =
+        Math.sqrt(dx*dx+dy*dy);
+
+
+        if(distancia <
+           jogador.tamanho+
+           moeda.tamanho){
+
+            moedasTotal +=
+            melhorias.multiplicadorDinheiro;
+
+
+            somMoeda();
+
+
+            return false;
+
+        }
+
+
+        return true;
+
+    });
+
+}
+
+
+/* =========================
+   COLISÕES NORMAL
+========================= */
+
+function verificarColisoes(){
+
+    tiros.forEach(function(tiro,indiceTiro){
+
+        inimigos.forEach(function(inimigo,indiceInimigo){
+
+            let dx =
+            tiro.x-inimigo.x;
+
+            let dy =
+            tiro.y-inimigo.y;
+
+
+            let distancia =
+            Math.sqrt(dx*dx+dy*dy);
+
+
+            if(distancia <
+               tiro.tamanho+
+               inimigo.tamanho){
+
+                inimigo.vida -= tiro.dano;
+
+
+                tiros.splice(indiceTiro,1);
+
+
+                criarParticulas(
+                    inimigo.x,
+                    inimigo.y
+                );
+
+
+                if(inimigo.vida<=0){
+
+                    pontos += 10;
+
+                    xp += 5;
+
+
+                    moedas.push({
+
+                        x:inimigo.x,
+
+                        y:inimigo.y,
+
+                        tamanho:8
+
+                    });
+
+
+                    inimigos.splice(
+                        indiceInimigo,
+                        1
+                    );
+
+                }
+
+            }
+
+        });
+
+    });
+
+
+    inimigos.forEach(function(inimigo){
+
+        let dx =
+        jogador.x-inimigo.x;
+
+        let dy =
+        jogador.y-inimigo.y;
+
+
+        let distancia =
+        Math.sqrt(dx*dx+dy*dy);
+
+
+        if(distancia <
+           jogador.tamanho+
+           inimigo.tamanho){
+
+            jogador.vida -= 0.5;
+
+
+            if(distancia>0){
+
+                inimigo.x -= dx*0.02;
+
+                inimigo.y -= dy*0.02;
+
+            }
+
+
+            if(jogador.vida<=0){
+
+                terminarJogo();
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   COLISÃO COM BOSS
+========================= */
+
+function verificarColisaoBoss(){
+
+    if(!boss)
+        return;
+
+
+    tiros.forEach(function(tiro,indice){
+
+        let dx =
+        tiro.x-boss.x;
+
+        let dy =
+        tiro.y-boss.y;
+
+
+        let distancia =
+        Math.sqrt(dx*dx+dy*dy);
+
+
+        if(distancia <
+           tiro.tamanho+
+           boss.tamanho){
+
+            boss.vida -= tiro.dano;
+
+
+            tiros.splice(indice,1);
+
+
+            criarParticulas(
+                boss.x,
+                boss.y
+            );
+
+
+            somDanoBoss();
+
+
+            atualizarBossHUD();
+
+
+            if(boss.vida<=0){
+
+                derrotarBoss();
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   DERROTAR BOSS
+========================= */
+
+function derrotarBoss(){
+
+    if(!boss)
+        return;
+
+
+    somMorteBoss();
+
+
+    /* 1000 moedas */
+
+    moedasTotal += 1000;
+
+
+    /* Pontos */
+
+    pontos += 100;
+
+
+    xp += 100;
+
+
+    /* Muitas partículas */
+
+    for(let i=0;i<50;i++){
+
+        particulas.push({
+
+            x:boss.x,
+
+            y:boss.y,
+
+            vx:(Math.random()-0.5)*12,
+
+            vy:(Math.random()-0.5)*12,
+
+            vida:60
+
+        });
+
+    }
+
+
+    alert(
+        "💀 BOSS DERROTADO!\n\n"+
+        "🪙 +1000 MOEDAS!\n"+
+        "⭐ +100 XP!"
+    );
+
+
+    boss = null;
+
+
+    bossHUD.style.display = "none";
+
+}
+
+
+/* =========================
+   ONDA
+========================= */
+
+function verificarOnda(){
+
+    let novaOnda =
+    Math.floor(pontos/100)+1;
+
+
+    if(novaOnda > onda){
+
+        onda = novaOnda;
+
+    }
+
+}
+
+
+/* =========================
+   PARTÍCULAS
+========================= */
+
+function criarParticulas(x,y){
+
+    for(let i=0;i<5;i++){
+
+        particulas.push({
+
+            x:x,
+
+            y:y,
+
+            vx:(Math.random()-0.5)*5,
+
+            vy:(Math.random()-0.5)*5,
+
+            vida:30
+
+        });
+
+    }
+
+}
+
+
+function atualizarParticulas(){
+
+    particulas =
+    particulas.filter(function(p){
+
+        p.x += p.vx;
+
+        p.y += p.vy;
+
+        p.vida--;
+
+        return p.vida>0;
+
+    });
+
+}
+
+
+/* =========================
+   DESENHAR
+========================= */
+
+function desenhar(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    ctx.fillStyle="#101010";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* Grid */
+
+    ctx.strokeStyle="#1b1b1b";
+
+    ctx.lineWidth=1;
+
+
+    for(
+        let x=0;
+        x<canvas.width;
+        x+=50
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(x,0);
+
+        ctx.lineTo(
+            x,
+            canvas.height
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for(
+        let y=0;
+        y<canvas.height;
+        y+=50
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(0,y);
+
+        ctx.lineTo(
+            canvas.width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* MOEDAS */
+
+    moedas.forEach(function(moeda){
+
+        ctx.beginPath();
+
+        ctx.arc(
+            moeda.x,
+            moeda.y,
+            moeda.tamanho,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#ffd700";
+
+        ctx.fill();
+
+        ctx.closePath();
+
+    });
+
+
+    /* TIROS */
+
+    tiros.forEach(function(tiro){
+
+        ctx.beginPath();
+
+        ctx.arc(
+            tiro.x,
+            tiro.y,
+            tiro.tamanho,
+            0,
+            Math.PI*2
+        );
+
+
+        if(tiro.bomba) ctx.fillStyle="#ff3300";
+        else if(armaAtual==="laser") ctx.fillStyle="#00ffff";
+        else if(armaAtual==="foguete" || armaAtual==="canhao") ctx.fillStyle="#ff6600";
+        else if(armaAtual==="rifle") ctx.fillStyle="#ffaa00";
+        else ctx.fillStyle="#fff";
+
+
+        ctx.fill();
+
+        ctx.closePath();
+
+    });
+
+
+    /* INIMIGOS */
+
+    inimigos.forEach(function(inimigo){
+
+        ctx.beginPath();
+
+        ctx.arc(
+            inimigo.x,
+            inimigo.y,
+            inimigo.tamanho,
+            0,
+            Math.PI*2
+        );
+
+
+        ctx.fillStyle="#00a83b";
+
+        ctx.fill();
+
+        ctx.closePath();
+
+
+        /* Olhos */
+
+      ctx.fillStyle="#ff0000";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            inimigo.x-5,
+            inimigo.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.arc(
+            inimigo.x+5,
+            inimigo.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    });
+
+
+    /* =========================
+       BOSS
+    ========================= */
+
+    if(boss){
+
+        /* Aura */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            boss.x,
+            boss.y,
+            boss.tamanho+15,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="rgba(255,0,0,0.15)";
+
+        ctx.fill();
+
+        ctx.closePath();
+
+
+        /* Corpo */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            boss.x,
+            boss.y,
+            boss.tamanho,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#7a0000";
+
+        ctx.fill();
+
+        ctx.closePath();
+
+
+        /* Cabeça */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            boss.x,
+            boss.y,
+            boss.tamanho-8,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle="#b30000";
+
+        ctx.fill();
+
+        ctx.closePath();
+
+
+        /* Olhos */
+
+        ctx.fillStyle="#ffff00";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            boss.x-18,
+            boss.y-10,
+            7,
+            0,
+            Math.PI*2
+        );
+
+        ctx.arc(
+            boss.x+18,
+            boss.y-10,
+            7,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        /* Chifres */
+
+        ctx.fillStyle="#eee";
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            boss.x-35,
+            boss.y-35
+        );
+
+        ctx.lineTo(
+            boss.x-15,
+            boss.y-55
+        );
+
+        ctx.lineTo(
+            boss.x-12,
+            boss.y-25
+        );
+
+        ctx.fill();
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            boss.x+35,
+            boss.y-35
+        );
+
+        ctx.lineTo(
+            boss.x+15,
+            boss.y-55
+        );
+
+        ctx.lineTo(
+            boss.x+12,
+            boss.y-25
+        );
+
+        ctx.fill();
+
+    }
+
+
+    /* =========================
+       JOGADOR
+    ========================= */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        jogador.x,
+        jogador.y,
+        jogador.tamanho,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fillStyle="#3498db";
+
+    ctx.fill();
+
+    ctx.closePath();
+
+
+    /* Mira / arma */
+
+    let angulo =
+    Math.atan2(
+        mouse.y-jogador.y,
+        mouse.x-jogador.x
+    );
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        jogador.x,
+        jogador.y
+    );
+
+    ctx.lineTo(
+        jogador.x+
+        Math.cos(angulo)*30,
+
+        jogador.y+
+        Math.sin(angulo)*30
+    );
+
+    ctx.strokeStyle="#fff";
+
+    ctx.lineWidth=5;
+
+    ctx.stroke();
+
+
+    /* Partículas */
+
+    particulas.forEach(function(p){
+
+        ctx.fillStyle="#ffcc00";
+
+        ctx.fillRect(
+            p.x,
+            p.y,
+            4,
+            4
+        );
+
+    });
+
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function atualizarHUD(){
+
+    if(!jogador)
+        return;
+
+
+    document.getElementById("vida").textContent =
+    Math.max(
+        0,
+        Math.floor(jogador.vida)
+    );
+
+
+    document.getElementById("moedas").textContent =
+    moedasTotal;
+
+
+    document.getElementById("multiplicadorHUD").textContent =
+    melhorias.multiplicadorDinheiro;
+
+
+    document.getElementById("xp").textContent =
+    xp;
+
+
+    document.getElementById("pontos").textContent =
+    pontos;
+
+
+    document.getElementById("onda").textContent =
+    onda;
+
+
+    atualizarArmaHUD();
+
+
+    atualizarBossHUD();
+
+}
+
+
+function atualizarArmaHUD(){
+
+    document.getElementById("armaAtual").textContent =
+    armas[armaAtual].nome;
+
+}
+
+
+/* =========================
+   HUD BOSS
+========================= */
+
+function atualizarBossHUD(){
+
+    if(!boss){
+
+        bossHUD.style.display = "none";
+
+        return;
+
+    }
+
+
+    bossHUD.style.display = "block";
+
+
+    let porcentagem =
+    Math.max(
+        0,
+        boss.vida / boss.vidaMax * 100
+    );
+
+
+    vidaBossBarra.style.width =
+    porcentagem+"%";
+
+
+    vidaBossTexto.textContent =
+    Math.max(
+        0,
+        Math.floor(boss.vida)
+    );
+
+}
+
+
+/* =========================
+   LOJA
+========================= */
+
+function abrirLoja(){
+
+    menu.classList.add("escondido");
+
+    loja.classList.remove("escondido");
+
+    atualizarLoja();
+
+}
+
+
+function fecharLoja(){
+
+    loja.classList.add("escondido");
+
+    menu.classList.remove("escondido");
+
+    atualizarMenu();
+
+}
+
+
+function atualizarMenu(){
+
+    document.getElementById("recordeMenu").textContent =
+    recorde;
+
+
+    document.getElementById("moedasMenu").textContent =
+    moedasTotal;
+
+}
+
+
+function atualizarLoja(){
+
+    document.getElementById("moedasLoja").textContent =
+    moedasTotal;
+
+
+    document.getElementById("multiplicadorLoja").textContent =
+    melhorias.multiplicadorDinheiro;
+
+
+    document.getElementById("proximoMultiplicador").textContent =
+    melhorias.multiplicadorDinheiro*2;
+
+
+    let precoMoney =
+    40*Math.pow(
+        2,
+        melhorias.nivelDinheiro
+    );
+
+
+    document.getElementById("precoMoney").textContent =
+    precoMoney;
+
+
+    document.getElementById("botaoArmas").textContent =
+    melhorias.armas
+    ? "✅ Comprado"
+    : "35 🪙";
+
+
+    document.getElementById("botaoLaser").textContent =
+    melhorias.laser
+    ? "✅ Comprado"
+    : "100 🪙";
+
+
+    document.getElementById("botaoFoguete").textContent = melhorias.foguete ? "✅ Comprado" : "300 🪙";
+    document.getElementById("botaoRifle").textContent = melhorias.rifle ? "✅ Comprado" : "1000 🪙";
+    document.getElementById("botaoCanhao").textContent = melhorias.canhao ? "✅ Comprado" : "1500 🪙";
+    document.getElementById("botaoBomba").textContent = melhorias.bomba ? "✅ Comprado" : "2000 🪙";
+
+}
+
+
+/* =========================
+   COMPRAS
+========================= */
+
+function comprarVida(){
+
+    if(moedasTotal>=25){
+
+        moedasTotal-=25;
+
+        melhorias.vida++;
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 25 moedas!"
+        );
+
+    }
+
+}
+
+
+function comprarVelocidade(){
+
+    if(moedasTotal>=30){
+
+        moedasTotal-=30;
+
+        melhorias.velocidade++;
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 30 moedas!"
+        );
+
+    }
+
+}
+
+
+function comprarDano(){
+
+    if(moedasTotal>=30){
+
+        moedasTotal-=30;
+
+        melhorias.dano++;
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 30 moedas!"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   MONEY INFINITO
+========================= */
+
+function comprarDobroDinheiro(){
+
+    let preco =
+    40*Math.pow(
+        2,
+        melhorias.nivelDinheiro
+    );
+
+
+    if(moedasTotal < preco){
+
+        alert(
+            "❌ Você precisa de "+
+            preco+
+            " moedas!"
+        );
+
+        return;
+
+    }
+
+
+    moedasTotal -= preco;
+
+
+    melhorias.nivelDinheiro++;
+
+
+    melhorias.multiplicadorDinheiro *= 2;
+
+
+    atualizarLoja();
+
+    atualizarMenu();
+
+
+    alert(
+
+        "💰 MONEY UP!\n\n"+
+
+        "Agora você ganha "+
+
+        melhorias.multiplicadorDinheiro+
+
+        "x moedas!\n\n"+
+
+        "Próxima compra: "+
+
+        preco*2+
+
+        " moedas."
+
+    );
+
+}
+
+
+/* =========================
+   ARMAS
+========================= */
+
+function comprarArmas(){
+
+    if(melhorias.armas){
+
+        alert(
+            "🔫 Você já comprou essas armas!"
+        );
+
+        return;
+
+    }
+
+
+    if(moedasTotal>=35){
+
+        moedasTotal-=35;
+
+        melhorias.armas=true;
+
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+
+        alert(
+
+            "🔫 ARMAS DESBLOQUEADAS!\n\n"+
+
+            "2 = Espingarda\n"+
+
+            "3 = Metralhadora"
+
+        );
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 35 moedas!"
+        );
+
+    }
+
+}
+
+
+function comprarLaser(){
+
+    if(melhorias.laser){
+
+        alert(
+            "⚡ Você já comprou o Laser!"
+        );
+
+        return;
+
+    }
+
+
+    if(moedasTotal>=100){
+
+        moedasTotal-=100;
+
+        melhorias.laser=true;
+
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+
+        alert(
+            "⚡ LASER DESBLOQUEADO!\n\n"+
+            "Pressione 4 para usar!"
+        );
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 100 moedas!"
+        );
+
+    }
+
+}
+
+
+function comprarFoguete(){
+
+    if(melhorias.foguete){
+
+        alert(
+            "🚀 Você já comprou o Foguete!"
+        );
+
+        return;
+
+    }
+
+
+    if(moedasTotal>=2000){
+
+        moedasTotal-=2000;
+
+        melhorias.foguete=true;
+
+
+        atualizarLoja();
+
+        atualizarMenu();
+
+
+        alert(
+
+            "🚀 LANÇADOR DE FOGUETES DESBLOQUEADO!\n\n"+
+
+            "Pressione 5 para usar!"
+
+        );
+
+    }
+
+    else{
+
+        alert(
+            "❌ Você precisa de 2000 moedas!"
+        );
+
+    }
+
+}
+
+
+function comprarRifle(){
+    if(melhorias.rifle){alert("🔥 Você já comprou o Rifle!");return;}
+    if(moedasTotal>=1000){moedasTotal-=1000;melhorias.rifle=true;atualizarLoja();atualizarMenu();alert("🔥 RIFLE PESADO DESBLOQUEADO!\n\n6 = Rifle\n💥 200 de dano");}
+    else alert("❌ Você precisa de 1000 moedas!");
+}
+function comprarCanhao(){
+    if(melhorias.canhao){alert("💣 Você já comprou o Canhão!");return;}
+    if(moedasTotal>=1500){moedasTotal-=1500;melhorias.canhao=true;atualizarLoja();atualizarMenu();alert("💣 CANHÃO DESTRUIDOR DESBLOQUEADO!\n\n7 = Canhão\n💥 250 de dano");}
+    else alert("❌ Você precisa de 1500 moedas!");
+}
+function comprarBomba(){
+    if(melhorias.bomba){alert("☢️ Você já comprou a Bomba!");return;}
+    if(moedasTotal>=2000){moedasTotal-=2000;melhorias.bomba=true;atualizarLoja();atualizarMenu();alert("☢️ BOMBA NUCLEAR DESBLOQUEADA!\n\n8 = Bomba\n💥 Cai no ponto da mira e destrói todos os zumbis do mapa!");}
+    else alert("❌ Você precisa de 2000 moedas!");
+}
+
+/* =========================
+   GAME OVER
+========================= */
+
+function terminarJogo(){
+
+    rodando=false;
+
+
+    if(pontos>recorde){
+
+        recorde=pontos;
+
+        localStorage.setItem(
+            "recordeZ",
+            recorde
+        );
+
+    }
+
+
+    jogo.classList.add("escondido");
+
+    gameOver.classList.remove("escondido");
+
+
+    document.getElementById("pontuacaoFinal").textContent =
+    pontos;
+
+
+    document.getElementById("ondaFinal").textContent =
+    onda;
+
+
+    document.getElementById("moedasFinal").textContent =
+    moedasTotal;
+
+
+    document.getElementById("recordeFinal").textContent =
+    recorde;
+
+}
+
+
+/* =========================
+   VOLTAR MENU
+========================= */
+
+function voltarMenu(){
+
+    rodando=false;
+
+
+    boss=null;
+
+
+    bossHUD.style.display="none";
+
+
+    gameOver.classList.add("escondido");
+
+    menu.classList.remove("escondido");
+
+
+    atualizarMenu();
+
+}
+
+
+/* =========================
+   COMEÇO
+========================= */
+
+
+</script>
+
+</body>
+</html>
