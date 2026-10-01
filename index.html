@@ -373,6 +373,11 @@ button:hover{
         <span id="moedasMenu">0</span>
     </div>
 
+    <div class="recorde">
+        🔄 Renascimentos:
+        <span id="renascimentosMenu">0</span>
+    </div>
+
 </div>
 
 
@@ -423,6 +428,25 @@ button:hover{
             </div>
 
             <button onclick="comprarDano()">30 🪙</button>
+
+        </div>
+
+
+        <div class="item-loja" style="border:2px solid #b86bff;background:linear-gradient(135deg,#241536,#3a1f58);">
+
+            <div>
+                🔄 RENASCIMENTO
+                <br>
+                <strong>Renascimentos: <span id="renascimentosLoja">0</span></strong>
+                <br>
+                <small>1º: 100 🪙 • aumenta 300 🪙 por vez</small>
+                <br>
+                <small>Bônus: +20% de dinheiro por renascimento</small>
+                <br>
+                <small>⚠️ Não perde armas nem melhorias</small>
+            </div>
+
+            <button onclick="comprarRenascimento()" id="botaoRenascimento">100 🪙</button>
 
         </div>
 
@@ -489,6 +513,31 @@ button:hover{
             <button onclick="comprarLaser()" id="botaoLaser">
                 100 🪙
             </button>
+
+        </div>
+
+
+        <div class="item-loja" style="border:2px solid #cfcfcf;background:linear-gradient(135deg,#1a1a1a,#292929);">
+
+            <div>
+                🔪 Faca Giratória
+                <br>
+                <small>45 🪙 por faca • Cada compra adiciona +1 • Máximo: 40</small>
+            </div>
+
+            <button onclick="comprarFaca()" id="botaoFaca">45 🪙</button>
+
+        </div>
+
+        <div class="item-loja" style="border:2px solid #00bfff;background:linear-gradient(135deg,#10202a,#12384a);">
+
+            <div>
+                🧲 ÍMÃ
+                <br>
+                <small>Puxa todas as moedas da tela para você • Compra única</small>
+            </div>
+
+            <button onclick="comprarIma()" id="botaoIma">200 🪙</button>
 
         </div>
 
@@ -655,6 +704,7 @@ let inimigos = [];
 let tiros = [];
 let moedas = [];
 let particulas = [];
+let facas = [];
 
 let teclas = {};
 
@@ -686,6 +736,7 @@ Number(localStorage.getItem("recordeZ")) || 0;
 let boss = null;
 
 let ultimoBossCriado = 0;
+let ultimoInimigoForteCriado = 0;
 
 
 /* =========================
@@ -704,6 +755,10 @@ let melhorias = {
 
     nivelDinheiro:0,
 
+    renascimentos:0,
+
+    bonusRenascimento:1,
+
     armas:false,
 
     laser:false,
@@ -711,7 +766,11 @@ let melhorias = {
     foguete:false,
     rifle:false,
     canhao:false,
-    bomba:false
+    bomba:false,
+
+    facas:0,
+
+    ima:false
 
 };
 
@@ -757,7 +816,8 @@ const armas = {
     foguete:{nome:"Lançador de Foguetes",dano:150,velocidade:7,intervalo:900,tamanho:10},
     rifle:{nome:"Rifle Pesado",dano:200,velocidade:15,intervalo:350,tamanho:8},
     canhao:{nome:"Canhão Destruidor",dano:250,velocidade:8,intervalo:700,tamanho:12},
-    bomba:{nome:"BOMBA NUCLEAR",dano:999999,velocidade:5,intervalo:3000,tamanho:14}
+    bomba:{nome:"BOMBA NUCLEAR",dano:999999,velocidade:5,intervalo:3000,tamanho:14},
+    faca:{nome:"Faca Giratória",dano:45,velocidade:0,intervalo:0,tamanho:7}
 
 };
 
@@ -1045,6 +1105,14 @@ function iniciarJogo(){
 
     particulas = [];
 
+    facas = [];
+    for(let i=0;i<melhorias.facas;i++){
+        facas.push({
+            angulo:(melhorias.facas ? (Math.PI*2/melhorias.facas)*i : 0),
+            acertos:new WeakMap()
+        });
+    }
+
 
     boss = null;
 
@@ -1061,6 +1129,7 @@ function iniciarJogo(){
     ultimoTiro = 0;
 
     ultimoBossCriado = 0;
+    ultimoInimigoForteCriado = 0;
 
 
     armaAtual = "pistola";
@@ -1120,11 +1189,15 @@ function atualizar(){
 
     moverTiros();
 
+    atualizarFacas();
+
     atualizarMoedas();
 
     atualizarParticulas();
 
     verificarColisoes();
+
+    verificarColisoesFacas();
 
     verificarColisaoBoss();
 
@@ -1194,6 +1267,41 @@ function criarInimigos(){
     let agora = Date.now();
 
 
+    /* 1 inimigo forte por onda */
+    if(ultimoInimigoForteCriado !== onda){
+
+        let ladoForte = Math.floor(Math.random()*4);
+        let xForte, yForte;
+
+        if(ladoForte===0){
+            xForte=Math.random()*canvas.width;
+            yForte=-40;
+        }else if(ladoForte===1){
+            xForte=canvas.width+40;
+            yForte=Math.random()*canvas.height;
+        }else if(ladoForte===2){
+            xForte=Math.random()*canvas.width;
+            yForte=canvas.height+40;
+        }else{
+            xForte=-40;
+            yForte=Math.random()*canvas.height;
+        }
+
+        inimigos.push({
+            x:xForte,
+            y:yForte,
+            tamanho:20,
+            vida:100,
+            vidaMax:100,
+            velocidade:0.8+onda*0.04,
+            dano:15,
+            tipo:"forte"
+        });
+
+        ultimoInimigoForteCriado = onda;
+    }
+
+
     let intervalo =
     Math.max(
         250,
@@ -1260,7 +1368,8 @@ function criarInimigos(){
             velocidade:
             1+onda*0.05,
 
-            dano:10
+            dano:10,
+            tipo:"normal"
 
         });
 
@@ -1577,12 +1686,88 @@ function explodirBomba(x,y){
     som(60,0.8,"sawtooth",0.12);
     inimigos.forEach(function(inimigo){
         for(let i=0;i<8;i++) criarParticulas(inimigo.x,inimigo.y);
-        pontos+=10; xp+=5; moedas.push({x:inimigo.x,y:inimigo.y,tamanho:8});
+        pontos+=10; xp+=5; moedas.push({
+            x:inimigo.x,
+            y:inimigo.y,
+            tamanho:8,
+            valor:inimigo.tipo === "forte" ? 20 : 1
+        });
     });
     inimigos=[];
     if(boss){ boss.vida=0; derrotarBoss(); }
     for(let i=0;i<180;i++) particulas.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14,vida:50+Math.random()*40});
     alert("☢️ BOMBA DETONADA!\n\n💥 TODOS OS ZUMBIS FORAM DESTRUÍDOS!");
+}
+
+
+/* =========================
+   FACAS GIRATÓRIAS
+========================= */
+
+function atualizarFacas(){
+    if(!facas.length || !jogador) return;
+    facas.forEach(function(faca){
+        faca.angulo += 0.055;
+    });
+}
+
+function posicaoFaca(faca){
+    const raio = 58;
+    return {
+        x:jogador.x + Math.cos(faca.angulo)*raio,
+        y:jogador.y + Math.sin(faca.angulo)*raio
+    };
+}
+
+function verificarColisoesFacas(){
+    if(!facas.length || !jogador) return;
+
+    const agora = Date.now();
+
+    facas.forEach(function(faca){
+        const pos = posicaoFaca(faca);
+
+        for(let i=inimigos.length-1;i>=0;i--){
+            const inimigo=inimigos[i];
+            const dx=pos.x-inimigo.x;
+            const dy=pos.y-inimigo.y;
+            const distancia=Math.sqrt(dx*dx+dy*dy);
+            const ultimo=faca.acertos.get(inimigo)||0;
+
+            if(distancia < 7+inimigo.tamanho && agora-ultimo>260){
+                faca.acertos.set(inimigo,agora);
+                inimigo.vida-=45;
+                criarParticulas(inimigo.x,inimigo.y);
+
+                if(inimigo.vida<=0){
+                    pontos+=10;
+                    xp+=5;
+                    moedas.push({
+                        x:inimigo.x,
+                        y:inimigo.y,
+                        tamanho:8,
+                        valor:inimigo.tipo === "forte" ? 20 : 1
+                    });
+                    inimigos.splice(i,1);
+                }
+            }
+        }
+
+        if(boss){
+            const dx=pos.x-boss.x;
+            const dy=pos.y-boss.y;
+            const distancia=Math.sqrt(dx*dx+dy*dy);
+            const ultimo=faca.acertos.get(boss)||0;
+
+            if(distancia < 7+boss.tamanho && agora-ultimo>260){
+                faca.acertos.set(boss,agora);
+                boss.vida-=45;
+                criarParticulas(pos.x,pos.y);
+                atualizarBossHUD();
+                if(boss.vida<=0) derrotarBoss();
+            }
+        }
+    });
 }
 
 
@@ -1604,13 +1789,27 @@ function atualizarMoedas(){
         let distancia =
         Math.sqrt(dx*dx+dy*dy);
 
+        // ÍMÃ: puxa moedas de qualquer ponto da tela
+        if(melhorias.ima && distancia>jogador.tamanho+moeda.tamanho){
+            const forca = Math.min(18, 5 + distancia*0.035);
+
+            moeda.x += (dx/distancia) * forca;
+            moeda.y += (dy/distancia) * forca;
+
+            dx = jogador.x-moeda.x;
+            dy = jogador.y-moeda.y;
+            distancia = Math.sqrt(dx*dx+dy*dy);
+        }
+
 
         if(distancia <
            jogador.tamanho+
            moeda.tamanho){
 
             moedasTotal +=
-            melhorias.multiplicadorDinheiro;
+            (moeda.valor || 1) *
+            melhorias.multiplicadorDinheiro *
+            melhorias.bonusRenascimento;
 
 
             somMoeda();
@@ -1678,7 +1877,9 @@ function verificarColisoes(){
 
                         y:inimigo.y,
 
-                        tamanho:8
+                        tamanho:8,
+
+                        valor:inimigo.tipo === "forte" ? 20 : 1
 
                     });
 
@@ -1810,9 +2011,9 @@ function derrotarBoss(){
     somMorteBoss();
 
 
-    /* 1000 moedas */
+    /* 1000 moedas + bônus dos renascimentos */
 
-    moedasTotal += 1000;
+    moedasTotal += 1000 * melhorias.bonusRenascimento;
 
 
     /* Pontos */
@@ -2061,11 +2262,23 @@ function desenhar(){
         );
 
 
-        ctx.fillStyle="#00a83b";
+        ctx.fillStyle = inimigo.tipo === "forte" ? "#8b2be2" : "#00a83b";
 
         ctx.fill();
 
         ctx.closePath();
+
+        /* Barra de vida do inimigo forte */
+        if(inimigo.tipo === "forte"){
+            const larguraVida = 42;
+            const vidaAtual = Math.max(0, inimigo.vida) / inimigo.vidaMax;
+
+            ctx.fillStyle="#220b35";
+            ctx.fillRect(inimigo.x-larguraVida/2, inimigo.y-inimigo.tamanho-10, larguraVida, 5);
+
+            ctx.fillStyle="#ff3bff";
+            ctx.fillRect(inimigo.x-larguraVida/2, inimigo.y-inimigo.tamanho-10, larguraVida*vidaAtual, 5);
+        }
 
 
         /* Olhos */
@@ -2227,6 +2440,35 @@ function desenhar(){
         ctx.fill();
 
     }
+
+
+    /* =========================
+       FACAS GIRATÓRIAS
+    ========================= */
+
+    facas.forEach(function(faca){
+        const pos=posicaoFaca(faca);
+        const tamanho=13;
+
+        ctx.save();
+        ctx.translate(pos.x,pos.y);
+        ctx.rotate(faca.angulo + Math.PI/4);
+
+        ctx.beginPath();
+        ctx.moveTo(0,-tamanho);
+        ctx.lineTo(5,2);
+        ctx.lineTo(0,tamanho);
+        ctx.lineTo(-5,2);
+        ctx.closePath();
+        ctx.fillStyle="#e8e8e8";
+        ctx.fill();
+        ctx.strokeStyle="#777";
+        ctx.stroke();
+
+        ctx.fillStyle="#7b4b25";
+        ctx.fillRect(-3,2,6,9);
+        ctx.restore();
+    });
 
 
     /* =========================
@@ -2425,13 +2667,23 @@ function atualizarMenu(){
     document.getElementById("moedasMenu").textContent =
     moedasTotal;
 
+    const renascMenu = document.getElementById("renascimentosMenu");
+    if(renascMenu) renascMenu.textContent = melhorias.renascimentos;
+
 }
 
 
 function atualizarLoja(){
 
     document.getElementById("moedasLoja").textContent =
-    moedasTotal;
+    Math.floor(moedasTotal);
+
+    document.getElementById("renascimentosLoja").textContent =
+    melhorias.renascimentos;
+
+    const precoRenascimento = 100 + (melhorias.renascimentos * 300);
+    document.getElementById("botaoRenascimento").textContent =
+    precoRenascimento + " 🪙";
 
 
     document.getElementById("multiplicadorLoja").textContent =
@@ -2469,6 +2721,10 @@ function atualizarLoja(){
     document.getElementById("botaoRifle").textContent = melhorias.rifle ? "✅ Comprado" : "1000 🪙";
     document.getElementById("botaoCanhao").textContent = melhorias.canhao ? "✅ Comprado" : "1500 🪙";
     document.getElementById("botaoBomba").textContent = melhorias.bomba ? "✅ Comprado" : "2000 🪙";
+
+    const botaoFaca = document.getElementById("botaoFaca");
+    botaoFaca.textContent = melhorias.facas >= 40 ? "🔪 MAX 40" : "45 🪙";
+    botaoFaca.disabled = melhorias.facas >= 40;
 
 }
 
@@ -2556,6 +2812,28 @@ function comprarDano(){
    MONEY INFINITO
 ========================= */
 
+function comprarRenascimento(){
+
+    const preco = 100 + (melhorias.renascimentos * 300);
+
+    if(moedasTotal < preco){
+        alert("❌ Você precisa de " + preco + " moedas para renascer!");
+        return;
+    }
+
+    // O renascimento NÃO reseta armas, facas, ímã ou outras melhorias.
+    moedasTotal -= preco;
+    melhorias.renascimentos++;
+    melhorias.bonusRenascimento = 1 + (melhorias.renascimentos * 0.20);
+
+    atualizarLoja();
+    atualizarMenu();
+    atualizarHUD();
+
+
+}
+
+
 function comprarDobroDinheiro(){
 
     let preco =
@@ -2592,23 +2870,6 @@ function comprarDobroDinheiro(){
     atualizarMenu();
 
 
-    alert(
-
-        "💰 MONEY UP!\n\n"+
-
-        "Agora você ganha "+
-
-        melhorias.multiplicadorDinheiro+
-
-        "x moedas!\n\n"+
-
-        "Próxima compra: "+
-
-        preco*2+
-
-        " moedas."
-
-    );
 
 }
 
@@ -2642,15 +2903,6 @@ function comprarArmas(){
         atualizarMenu();
 
 
-        alert(
-
-            "🔫 ARMAS DESBLOQUEADAS!\n\n"+
-
-            "2 = Espingarda\n"+
-
-            "3 = Metralhadora"
-
-        );
 
     }
 
@@ -2690,10 +2942,6 @@ function comprarLaser(){
         atualizarMenu();
 
 
-        alert(
-            "⚡ LASER DESBLOQUEADO!\n\n"+
-            "Pressione 4 para usar!"
-        );
 
     }
 
@@ -2733,13 +2981,6 @@ function comprarFoguete(){
         atualizarMenu();
 
 
-        alert(
-
-            "🚀 LANÇADOR DE FOGUETES DESBLOQUEADO!\n\n"+
-
-            "Pressione 5 para usar!"
-
-        );
 
     }
 
@@ -2756,19 +2997,63 @@ function comprarFoguete(){
 
 function comprarRifle(){
     if(melhorias.rifle){alert("🔥 Você já comprou o Rifle!");return;}
-    if(moedasTotal>=1000){moedasTotal-=1000;melhorias.rifle=true;atualizarLoja();atualizarMenu();alert("🔥 RIFLE PESADO DESBLOQUEADO!\n\n6 = Rifle\n💥 200 de dano");}
+    if(moedasTotal>=1000){moedasTotal-=1000;melhorias.rifle=true;atualizarLoja();atualizarMenu();}
     else alert("❌ Você precisa de 1000 moedas!");
 }
 function comprarCanhao(){
     if(melhorias.canhao){alert("💣 Você já comprou o Canhão!");return;}
-    if(moedasTotal>=1500){moedasTotal-=1500;melhorias.canhao=true;atualizarLoja();atualizarMenu();alert("💣 CANHÃO DESTRUIDOR DESBLOQUEADO!\n\n7 = Canhão\n💥 250 de dano");}
+    if(moedasTotal>=1500){moedasTotal-=1500;melhorias.canhao=true;atualizarLoja();atualizarMenu();}
     else alert("❌ Você precisa de 1500 moedas!");
 }
 function comprarBomba(){
     if(melhorias.bomba){alert("☢️ Você já comprou a Bomba!");return;}
-    if(moedasTotal>=2000){moedasTotal-=2000;melhorias.bomba=true;atualizarLoja();atualizarMenu();alert("☢️ BOMBA NUCLEAR DESBLOQUEADA!\n\n8 = Bomba\n💥 Cai no ponto da mira e destrói todos os zumbis do mapa!");}
+    if(moedasTotal>=2000){moedasTotal-=2000;melhorias.bomba=true;atualizarLoja();atualizarMenu();}
     else alert("❌ Você precisa de 2000 moedas!");
 }
+
+function comprarFaca(){
+    if(melhorias.facas>=40){
+        alert("🔪 Você já chegou ao máximo de 40 facas!");
+        return;
+    }
+
+    if(moedasTotal<0){
+        alert("❌ Você precisa de 45 moedas!");
+        return;
+    }
+
+    moedasTotal-=0;
+    melhorias.facas++;
+
+    facas.push({
+        angulo:Math.random()*Math.PI*2,
+        acertos:new WeakMap()
+    });
+
+    atualizarLoja();
+    atualizarMenu();
+
+}
+
+function comprarIma(){
+    if(melhorias.ima){
+        alert("🧲 Você já comprou o ÍMÃ!");
+        return;
+    }
+
+    if(moedasTotal<0){
+        alert("❌ Você precisa de 200 moedas!");
+        return;
+    }
+
+    moedasTotal-=0;
+    melhorias.ima=true;
+
+    atualizarLoja();
+    atualizarMenu();
+
+}
+
 
 /* =========================
    GAME OVER
