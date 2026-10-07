@@ -441,42 +441,118 @@ button:disabled{
     margin:4px;
 }
 
-.rank-list{margin-top:10px}
+ .rank-list{
+    margin-top:10px;
+    max-height:55vh;
+    overflow-y:auto;
+    padding-right:5px;
+}
 
 .rank-row{
     display:grid;
-    grid-template-columns:55px 1fr 110px;
-    gap:8px;
+    grid-template-columns:65px 1fr 120px;
+    gap:10px;
     align-items:center;
-    background:#222;
+    background:linear-gradient(135deg,#171717,#262626);
     border:1px solid #3a3a3a;
-    padding:11px;
-    margin:7px 0;
-    border-radius:9px;
+    padding:13px;
+    margin:8px 0;
+    border-radius:10px;
+    transition:.2s;
+}
+
+.rank-row:hover{
+    transform:translateX(4px);
+    border-color:#55eaff;
+    background:#292929;
+}
+
+.rank-row.jogador-atual{
+    border:2px solid #55eaff;
+    background:linear-gradient(135deg,#102b32,#173d45);
+    box-shadow:0 0 12px rgba(85,234,255,.25);
 }
 
 .rank-pos{
     font-weight:bold;
     color:#ffd700;
     text-align:center;
+    font-size:18px;
+}
+
+.rank-row:nth-child(1) .rank-pos{
+    color:#ffd700;
+    font-size:22px;
+}
+
+.rank-row:nth-child(2) .rank-pos{
+    color:#cfd8dc;
+    font-size:21px;
+}
+
+.rank-row:nth-child(3) .rank-pos{
+    color:#cd7f32;
+    font-size:20px;
 }
 
 .rank-player{
     font-weight:bold;
     overflow:hidden;
     text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#fff;
+}
+
+.rank-player small{
+    display:block;
+    color:#55eaff;
+    font-size:11px;
+    margin-top:3px;
 }
 
 .rank-score{
     text-align:right;
     color:#55eaff;
     font-weight:bold;
+    white-space:nowrap;
+}
+
+.rank-cabecalho{
+    display:grid;
+    grid-template-columns:65px 1fr 120px;
+    gap:10px;
+    padding:8px 13px;
+    color:#888;
+    font-size:12px;
+    text-transform:uppercase;
+    font-weight:bold;
+}
+
+.rank-info{
+    text-align:center;
+    color:#aaa;
+    margin-bottom:10px;
+    font-size:14px;
 }
 
 .rank-vazio{
     text-align:center;
     color:#aaa;
     padding:20px;
+}
+
+@media(max-width:600px){
+    .rank-row{
+        grid-template-columns:50px 1fr 90px;
+    }
+
+    .rank-cabecalho{
+        grid-template-columns:50px 1fr 90px;
+    }
+
+    .rank-score{
+        font-size:13px;
+    }
 }
 
 @media(max-width:600px){
@@ -544,7 +620,7 @@ button:disabled{
         <h2>🏆 RANKING</h2>
 
         <p style="text-align:center;color:#aaa;">
-            Melhores pontuações salvas neste navegador.
+            Jogadores cadastrados neste navegador, ordenados pela maior pontuação.
         </p>
 
         <div id="rankLista" class="rank-list"></div>
@@ -804,7 +880,7 @@ button:disabled{
             </div>
 
             <button onclick="comprarBomba()" id="botaoBomba">
-                2000 🪙
+                20000 🪙
             </button>
         </div>
 
@@ -992,9 +1068,13 @@ function salvarProgresso(){
         }
     };
 
-    contas[usuarioAtual].melhorPontuacao = recorde;
+    contas[usuarioAtual].melhorPontuacao=Math.max(
+        Number(contas[usuarioAtual].melhorPontuacao)||0,
+        Number(recorde)||0
+    );
 
     salvarContas(contas);
+    sincronizarRank();
 }
 
 function carregarProgresso(){
@@ -1115,14 +1195,8 @@ function criarConta(){
 
     salvarContas(contas);
 
-    const rank=lerRank();
-
-    rank.push({
-        nome:nome,
-        pontos:0
-    });
-
-    salvarRank(rank);
+    /* Coloca automaticamente a nova conta no ranking */
+    sincronizarRank();
 
     usuarioAtual=nome;
 
@@ -1302,91 +1376,123 @@ function fecharRank(){
     menu.classList.remove("escondido");
 }
 
+function escaparHTML(texto){
+    return String(texto ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+function sincronizarRank(){
+
+    const contas=lerContas();
+
+    const rank=Object.keys(contas).map(nome=>({
+        nome:nome,
+        pontos:Number(contas[nome].melhorPontuacao)||0
+    }));
+
+    rank.sort((a,b)=>{
+
+        const diferenca=
+            Number(b.pontos||0)-Number(a.pontos||0);
+
+        if(diferenca!==0) return diferenca;
+
+        return a.nome.localeCompare(
+            b.nome,
+            "pt-BR",
+            {sensitivity:"base"}
+        );
+    });
+
+    salvarRank(rank);
+
+    return rank;
+}
+
 function atualizarRankComPontuacao(pontuacao){
 
     if(!usuarioAtual) return;
 
     const contas=lerContas();
 
-    if(contas[usuarioAtual]){
+    if(!contas[usuarioAtual]) return;
 
-        contas[usuarioAtual].melhorPontuacao=
-            Math.max(
-                Number(contas[usuarioAtual].melhorPontuacao)||0,
-                pontuacao
-            );
+    const pontos=Number(pontuacao)||0;
 
-        salvarContas(contas);
-    }
+    contas[usuarioAtual].melhorPontuacao=Math.max(
+        Number(contas[usuarioAtual].melhorPontuacao)||0,
+        pontos
+    );
 
-    let rank=lerRank();
+    salvarContas(contas);
 
-    const existente=
-        rank.find(r=>r.nome===usuarioAtual);
-
-    if(existente){
-
-        existente.pontos=
-            Math.max(
-                Number(existente.pontos)||0,
-                pontuacao
-            );
-
-    }else{
-
-        rank.push({
-            nome:usuarioAtual,
-            pontos:pontuacao
-        });
-    }
-
-    rank.sort((a,b)=>b.pontos-a.pontos);
-
-    salvarRank(rank.slice(0,100));
+    sincronizarRank();
 }
 
 function renderizarRank(){
 
-    const box=
-        document.getElementById("rankLista");
+    const box=document.getElementById("rankLista");
 
     if(!box) return;
 
-    const rank=
-        lerRank()
-        .sort((a,b)=>b.pontos-a.pontos)
-        .slice(0,10);
+    const rank=sincronizarRank();
 
     if(!rank.length){
 
         box.innerHTML=
-        '<div class="rank-vazio">Nenhum jogador no ranking ainda.</div>';
+            '<div class="rank-vazio">Nenhum jogador cadastrado ainda.</div>';
 
         return;
     }
 
-    box.innerHTML=
-        rank.map((r,i)=>`
-
-        <div class="rank-row">
-
-            <div class="rank-pos">
-                ${i+1}º
-            </div>
-
-            <div class="rank-player">
-                ${r.nome}
-                ${r.nome===usuarioAtual ? " 👤":""}
-            </div>
-
-            <div class="rank-score">
-                ${r.pontos} pts
-            </div>
-
+    box.innerHTML=`
+        <div class="rank-info">
+            👥 ${rank.length} jogador(es) no ranking
         </div>
 
-    `).join("");
+        <div class="rank-cabecalho">
+            <div>POS.</div>
+            <div>JOGADOR</div>
+            <div style="text-align:right;">PONTOS</div>
+        </div>
+
+        ${rank.map((r,i)=>{
+
+            const atual=r.nome===usuarioAtual;
+
+            const medalha=
+                i===0 ? "🥇":
+                i===1 ? "🥈":
+                i===2 ? "🥉":
+                "";
+
+            return `
+                <div class="rank-row ${atual ? "jogador-atual":""}">
+
+                    <div class="rank-pos">
+                        ${medalha || (i+1)+"º"}
+                    </div>
+
+                    <div class="rank-player">
+                        ${escaparHTML(r.nome)}
+                        ${atual ? '<small>👤 VOCÊ</small>':""}
+                    </div>
+
+                    <div class="rank-score">
+                        ${Number(r.pontos||0).toLocaleString("pt-BR")} pts
+                    </div>
+
+                </div>
+            `;
+
+        }).join("")}
+    `;
 }
+
 
 /* =========================================================
    CANVAS
@@ -3361,7 +3467,7 @@ function atualizarLoja(){
     document.getElementById("botaoBomba").textContent=
         melhorias.bomba
         ?"✅ Comprado"
-        :"2000 🪙";
+        :"20000 🪙";
 
     const botaoFaca=
         document.getElementById("botaoFaca");
@@ -3762,8 +3868,6 @@ function terminarJogo(){
 
     rodando=false;
 
-    atualizarRankComPontuacao(pontos);
-
     if(pontos>recorde){
 
         recorde=pontos;
@@ -3776,6 +3880,9 @@ function terminarJogo(){
 
     /* SALVA TODO O PROGRESSO */
     salvarProgresso();
+
+    /* ATUALIZA O RANK COM A MAIOR PONTUAÇÃO DO JOGADOR */
+    atualizarRankComPontuacao(recorde);
 
     jogo.classList.add("escondido");
 
@@ -3856,4 +3963,3 @@ inicializarConta();
 
 </body>
 </html>
-
